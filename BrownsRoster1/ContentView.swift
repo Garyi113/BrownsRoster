@@ -33,7 +33,7 @@ struct ContentView: View {
                 || player.number.localizedCaseInsensitiveContains(searchText)
                 || player.college.localizedCaseInsensitiveContains(searchText)
 
-            let matchesPosition = selectedPosition == FilterOption.all || player.position == selectedPosition
+            let matchesPosition = selectedPosition == FilterOption.all || player.positionFilterValue == selectedPosition
             let matchesStatus = selectedStatus == FilterOption.all || player.rosterStatus == selectedStatus
 
             return matchesSearch && matchesPosition && matchesStatus
@@ -43,7 +43,7 @@ struct ContentView: View {
     }
 
     private var positionOptions: [String] {
-        [FilterOption.all] + Set(players.map(\.position)).sorted()
+        [FilterOption.all] + Set(players.map(\.positionFilterValue)).sorted()
     }
 
     private var statusOptions: [String] {
@@ -155,6 +155,12 @@ private extension Array where Element == Player {
     }
 }
 
+private extension Player {
+    var positionFilterValue: String {
+        position == "P" ? "K" : position
+    }
+}
+
 private struct HeaderView: View {
     let playerCount: Int
 
@@ -258,16 +264,17 @@ private struct PlayerRow: View {
         HStack(spacing: 12) {
             HeadshotImage(player: player, rosterLoader: rosterLoader, size: 64)
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(player.name)
-                        .font(.headline)
-                        .lineLimit(1)
+            Text(player.number)
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+                .frame(width: 64, height: 64)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
 
-                    Text("#\(player.number)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
+            VStack(alignment: .leading, spacing: 5) {
+                Text(player.name)
+                    .font(.headline)
+                    .lineLimit(1)
 
                 Text("\(player.position) - \(player.height) - \(player.weight) lbs")
                     .font(.subheadline)
@@ -299,8 +306,8 @@ private struct PlayerDetailView: View {
                             .font(.title.bold())
                             .multilineTextAlignment(.center)
 
-                        Text("#\(player.number) - \(player.position)")
-                            .font(.title3.weight(.semibold))
+                        Text("\(player.number) - \(player.position)")
+                            .font(.title2.weight(.bold))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)

@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4E41CB0E303C8AF80006E58C /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E41CB0D303C8AF80006E58C /* Player.swift */; };
-		4E41CB10303C8B100006E58C /* RosterLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E41CB0F303C8B100006E58C /* RosterLoader.swift */; };
+		4EC500F730754CF6005717FC /* GetRoster.py in Resources */ = {isa = PBXBuildFile; fileRef = 4EC500F530754CF6005717FC /* GetRoster.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,8 +31,7 @@
 		4E41CA1C303C78A40006E58C /* BrownsRoster1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BrownsRoster1.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E41CA29303C78A50006E58C /* BrownsRoster1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrownsRoster1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E41CA33303C78A50006E58C /* BrownsRoster1UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrownsRoster1UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4E41CB0D303C8AF80006E58C /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
-		4E41CB0F303C8B100006E58C /* RosterLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterLoader.swift; sourceTree = "<group>"; };
+		4EC500F530754CF6005717FC /* GetRoster.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = GetRoster.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -82,12 +80,11 @@
 		4E41CA13303C78A40006E58C = {
 			isa = PBXGroup;
 			children = (
+				4EC500F630754CF6005717FC /* Scripts */,
 				4E41CA1E303C78A40006E58C /* BrownsRoster1 */,
 				4E41CA2C303C78A50006E58C /* BrownsRoster1Tests */,
 				4E41CA36303C78A50006E58C /* BrownsRoster1UITests */,
 				4E41CA1D303C78A40006E58C /* Products */,
-				4E41CB0D303C8AF80006E58C /* Player.swift */,
-				4E41CB0F303C8B100006E58C /* RosterLoader.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,6 +96,14 @@
 				4E41CA33303C78A50006E58C /* BrownsRoster1UITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4EC500F630754CF6005717FC /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				4EC500F530754CF6005717FC /* GetRoster.py */,
+			);
+			path = Scripts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -221,6 +226,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4EC500F730754CF6005717FC /* GetRoster.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,8 +251,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4E41CB0E303C8AF80006E58C /* Player.swift in Sources */,
-				4E41CB10303C8B100006E58C /* RosterLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

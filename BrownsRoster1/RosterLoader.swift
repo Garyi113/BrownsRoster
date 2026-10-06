@@ -30,7 +30,7 @@ enum RosterLoaderError: LocalizedError {
 
 struct RosterLoader {
     func loadPlayers() throws -> [Player] {
-        guard let databaseURL = Bundle.main.url(forResource: "browns", withExtension: "db") else {
+        guard let databaseURL = databaseURL() else {
             throw RosterLoaderError.databaseNotFound
         }
 
@@ -119,11 +119,23 @@ struct RosterLoader {
         Bundle.main.url(
             forResource: player.headshotResourceName,
             withExtension: "jpg",
+            subdirectory: "Resources/headshots"
+        ) ?? Bundle.main.url(
+            forResource: player.headshotResourceName,
+            withExtension: "jpg",
             subdirectory: "headshots"
         ) ?? Bundle.main.url(
             forResource: player.headshotResourceName,
             withExtension: "jpg"
         )
+    }
+
+    private func databaseURL() -> URL? {
+        Bundle.main.url(
+            forResource: "browns",
+            withExtension: "db",
+            subdirectory: "Resources"
+        ) ?? Bundle.main.url(forResource: "browns", withExtension: "db")
     }
 
     private func textValue(_ statement: OpaquePointer?, column: Int32) -> String {
