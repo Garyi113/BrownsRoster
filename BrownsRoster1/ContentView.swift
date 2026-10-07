@@ -22,6 +22,8 @@ struct ContentView: View {
     @State private var selectedPosition = FilterOption.all
     @State private var selectedStatus = FilterOption.all
     @State private var selectedSort = SortOption.lastName
+    @State private var rosterDebugInfo = RosterUpdater.currentDebugInfo()
+    @State private var updateStatus = "Update not checked yet"
 
     private let rosterLoader = RosterLoader()
     private let rosterUpdater = RosterUpdater()
@@ -54,7 +56,11 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
-                HeaderView(playerCount: players.count)
+                HeaderView(
+                    playerCount: players.count,
+                    debugInfo: rosterDebugInfo,
+                    updateStatus: updateStatus
+                )
 
                 if !players.isEmpty {
                     FilterBar(
@@ -103,10 +109,12 @@ struct ContentView: View {
 
         do {
             let didUpdate = try await rosterUpdater.updateIfNeeded()
+            updateStatus = didUpdate ? "Downloaded latest roster" : "Roster already current"
             if didUpdate {
                 loadPlayers()
             }
         } catch {
+            updateStatus = "Update failed: \(error.localizedDescription)"
             print("Roster update check failed: \(error.localizedDescription)")
         }
     }
@@ -114,6 +122,7 @@ struct ContentView: View {
     private func loadPlayers() {
         do {
             players = try rosterLoader.loadPlayers()
+            rosterDebugInfo = RosterUpdater.currentDebugInfo()
             loadingError = nil
         } catch {
             loadingError = error.localizedDescription
@@ -178,6 +187,8 @@ private extension Player {
 
 private struct HeaderView: View {
     let playerCount: Int
+    let debugInfo: RosterDebugInfo
+    let updateStatus: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -188,6 +199,14 @@ private struct HeaderView: View {
             Text(subtitle)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            Text(debugInfo.summary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(updateStatus)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(.horizontal)
         .padding(.top)
@@ -196,10 +215,10 @@ private struct HeaderView: View {
 
     private var subtitle: String {
         if playerCount == 0 {
-            return "Codex practice project"
+            return "Loading players"
         }
 
-        return "Codex practice project - \(playerCount) players"
+        return "\(playerCount) players"
     }
 }
 

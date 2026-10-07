@@ -163,6 +163,26 @@ struct RosterManifest: Codable, Equatable {
     let databaseUrl: URL
 }
 
+struct RosterDebugInfo: Equatable {
+    let source: String
+    let manifestVersion: String?
+    let manifestPlayerCount: Int?
+
+    var summary: String {
+        var parts = ["Source: \(source)"]
+
+        if let manifestVersion {
+            parts.append("Manifest: \(manifestVersion)")
+        }
+
+        if let manifestPlayerCount {
+            parts.append("Published: \(manifestPlayerCount)")
+        }
+
+        return parts.joined(separator: " | ")
+    }
+}
+
 struct RosterUpdater {
     private let manifestURL = URL(
         string: "https://garyi113.github.io/BrownsRoster/roster/roster_manifest.json"
@@ -188,6 +208,23 @@ struct RosterUpdater {
     static func downloadedDatabaseURLIfAvailable() -> URL? {
         let url = downloadedDatabaseURL
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    static func currentDebugInfo() -> RosterDebugInfo {
+        guard downloadedDatabaseURLIfAvailable() != nil else {
+            return RosterDebugInfo(
+                source: "Bundled",
+                manifestVersion: nil,
+                manifestPlayerCount: nil
+            )
+        }
+
+        let manifest = try? localManifest()
+        return RosterDebugInfo(
+            source: "Downloaded",
+            manifestVersion: manifest?.version,
+            manifestPlayerCount: manifest?.playerCount
+        )
     }
 
     private static func applicationSupportDirectory() throws -> URL {
