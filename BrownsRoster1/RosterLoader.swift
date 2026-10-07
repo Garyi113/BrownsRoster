@@ -189,20 +189,39 @@ struct RosterUpdater {
     )!
 
     func updateIfNeeded() async throws -> Bool {
-        let (manifestData, _) = try await URLSession.shared.data(from: manifestURL)
+        let (manifestData, _) = try await URLSession.shared.data(for: Self.uncachedRequest(for: manifestURL))
         let remoteManifest = try JSONDecoder().decode(RosterManifest.self, from: manifestData)
 
         if let localManifest = try? Self.localManifest(), localManifest.sha256 == remoteManifest.sha256 {
             return false
         }
 
-        let (databaseData, _) = try await URLSession.shared.data(from: remoteManifest.databaseUrl)
+        let databaseURL = Self.cacheBustedDatabaseURL(for: remoteManifest)
+        let (databaseData, _) = try await URLSession.shared.data(for: Self.uncachedRequest(for: databaseURL))
         guard Self.sha256Hex(for: databaseData) == remoteManifest.sha256 else {
             throw RosterUpdaterError.hashMismatch
         }
 
         try Self.install(databaseData: databaseData, manifestData: manifestData)
         return true
+    }
+
+    private static func uncachedRequest(for url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        return request
+    }
+
+    private static func cacheBustedDatabaseURL(for manifest: RosterManifest) -> URL {
+        guard var components = URLComponents(url: manifest.databaseUrl, resolvingAgainstBaseURL: false) else {
+            return manifest.databaseUrl
+        }
+
+        components.queryItems = [
+            URLQueryItem(name: "sha256", value: manifest.sha256)
+        ]
+        return components.url ?? manifest.databaseUrl
     }
 
     static func downloadedDatabaseURLIfAvailable() -> URL? {
