@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
+import hashlib
+import json
 import re
 import shutil
 import sqlite3
@@ -18,6 +20,7 @@ from bs4 import BeautifulSoup
 
 ROSTER_URL = "https://www.clevelandbrowns.com/team/players-roster/"
 BASE_URL = "https://www.clevelandbrowns.com"
+DEFAULT_PUBLIC_BASE_URL = "https://garyi113.github.io/BrownsRoster/roster"
 
 
 @dataclass
@@ -55,6 +58,10 @@ def default_headshots_path() -> Path:
 
 def default_backup_path() -> Path:
     return project_root() / "Backups"
+
+
+def default_publish_path() -> Path:
+    return project_root() / "docs" / "roster"
 
 
 def get_roster_page() -> str:
@@ -331,6 +338,39 @@ def install_database(new_database: Path, database_path: Path) -> None:
     shutil.move(str(new_database), str(database_path))
 
 
+def file_sha256(file_path: Path) -> str:
+    digest = hashlib.sha256()
+    with file_path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
+
+
+def publish_database(
+    database_path: Path,
+    publish_directory: Path,
+    public_base_url: str,
+    snapshot_date: str,
+    player_count: int,
+) -> Path:
+    publish_directory.mkdir(parents=True, exist_ok=True)
+
+    published_database = publish_directory / database_path.name
+    shutil.copy2(database_path, published_database)
+
+    manifest = {
+        "version": snapshot_date,
+        "playerCount": player_count,
+        "sha256": file_sha256(published_database),
+        "databaseUrl": f"{public_base_url.rstrip('/')}/{database_path.name}",
+    }
+
+    manifest_path = publish_directory / "roster_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return manifest_path
+
+
 def send_notification(title: str, message: str) -> None:
     script = f'display notification "{message}" with title "{title}"'
     try:
@@ -384,9 +424,25 @@ def parse_arguments() -> argparse.Namespace:
         help="Directory where the previous database is saved when roster data changes.",
     )
     parser.add_argument(
+        "--publish-directory",
+        type=Path,
+        default=default_publish_path(),
+        help="Directory where browns.db and roster_manifest.json are published for GitHub Pages.",
+    )
+    parser.add_argument(
+        "--public-base-url",
+        default=DEFAULT_PUBLIC_BASE_URL,
+        help="Public URL prefix where published roster files will be hosted.",
+    )
+    parser.add_argument(
         "--skip-headshots",
         action="store_true",
         help="Write the database without downloading missing headshots.",
+    )
+    parser.add_argument(
+        "--skip-publish",
+        action="store_true",
+        help="Do not copy browns.db or write roster_manifest.json into the publish directory.",
     )
     parser.add_argument(
         "--force",
@@ -416,8 +472,9 @@ def main() -> None:
         write_database(players, new_database, args.snapshot_date)
 
         has_changed = not databases_match(args.database, new_database)
+        should_install = has_changed or args.force
 
-        if has_changed or args.force:
+        if should_install:
             backup_path = backup_database(args.database, args.backup_directory)
             install_database(new_database, args.database)
 
@@ -440,6 +497,17 @@ def main() -> None:
                     "Browns roster unchanged",
                     f"Checked {len(players)} players. No database update needed.",
                 )
+
+    if not args.skip_publish:
+        manifest_path = publish_database(
+            args.database,
+            args.publish_directory,
+            args.public_base_url,
+            args.snapshot_date,
+            len(players),
+        )
+        print(f"Published roster database: {args.publish_directory / args.database.name}")
+        print(f"Published manifest: {manifest_path}")
 
     if not args.skip_headshots:
         download_headshots(players, args.headshots)

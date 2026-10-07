@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var selectedSort = SortOption.lastName
 
     private let rosterLoader = RosterLoader()
+    private let rosterUpdater = RosterUpdater()
 
     private var filteredPlayers: [Player] {
         let filtered = players.filter { player in
@@ -92,7 +93,21 @@ struct ContentView: View {
         }
         .searchable(text: $searchText, prompt: "Search players")
         .task {
-            loadPlayers()
+            await loadPlayersAndCheckForUpdates()
+        }
+    }
+
+    @MainActor
+    private func loadPlayersAndCheckForUpdates() async {
+        loadPlayers()
+
+        do {
+            let didUpdate = try await rosterUpdater.updateIfNeeded()
+            if didUpdate {
+                loadPlayers()
+            }
+        } catch {
+            print("Roster update check failed: \(error.localizedDescription)")
         }
     }
 

@@ -6,6 +6,7 @@ Browns Roster is a SwiftUI practice project that displays a Cleveland Browns ros
 
 - SwiftUI roster list and player detail screen
 - Local SQLite roster loading
+- Optional roster database updates from GitHub Pages
 - Bundled headshot support
 - Search by player name, jersey number, position, or college
 - Filter by position and roster status
@@ -31,18 +32,22 @@ BrownsRoster1/
   Scripts/
     GetRoster.py
     DownloadHeadshots.py
+  docs/
+    roster/
+      browns.db
+      roster_manifest.json
 ```
 
 ## Local Data Files
 
-The app currently uses bundled roster resources:
+The app ships with bundled roster resources:
 
 ```text
 BrownsRoster1/BrownsRoster1/Resources/browns.db
 BrownsRoster1/BrownsRoster1/Resources/headshots/
 ```
 
-`RosterLoader.swift` looks in `Resources/` first, with fallback support for the previous database/headshot locations.
+On launch, `RosterUpdater` checks the published roster manifest. If the hosted database has a new SHA-256 hash, the app downloads it into Application Support. `RosterLoader.swift` uses that downloaded database first, then falls back to the bundled database.
 
 ## Roster Scripts
 
@@ -62,6 +67,8 @@ When a change is found, `GetRoster.py`:
 
 - backs up the previous database into `Backups/`
 - installs the new database at `BrownsRoster1/Resources/browns.db`
+- publishes `docs/roster/browns.db`
+- writes `docs/roster/roster_manifest.json`
 - downloads missing headshots
 - sends a local macOS notification
 
@@ -71,11 +78,27 @@ For a quiet check without a notification:
 python3 Scripts/GetRoster.py --no-notify
 ```
 
+To update the bundled database without publishing roster files:
+
+```bash
+python3 Scripts/GetRoster.py --skip-publish
+```
+
 To download only missing headshots:
 
 ```bash
 python3 Scripts/DownloadHeadshots.py
 ```
+
+## Published Roster Updates
+
+The app expects the roster manifest at:
+
+```text
+https://garyi113.github.io/BrownsRoster/roster/roster_manifest.json
+```
+
+GitHub Pages should be configured to serve the repository's `docs/` folder. After `docs/roster/` is pushed, the app can compare the manifest hash with the local downloaded copy and install the hosted `browns.db` when it changes.
 
 ## Running the App
 
@@ -98,8 +121,9 @@ That corresponds to the TestFlight build `1.0 (2)`.
 ## Implementation Notes
 
 - `Player.swift` defines the roster model.
-- `RosterLoader.swift` opens `browns.db` read-only from the app bundle and maps the latest roster snapshot into `Player` values.
-- `ContentView.swift` contains the roster UI, filtering, sorting, searching, row display, and detail screen.
+- `RosterLoader.swift` opens `browns.db` read-only from Application Support or the app bundle and maps the latest roster snapshot into `Player` values.
+- `RosterUpdater` downloads and verifies the published database before installing it locally.
+- `ContentView.swift` contains the roster UI, filtering, sorting, searching, row display, detail screen, and launch-time update check.
 - Headshots are matched by `imageNumber` and `player.id`, using filenames like `1002_austin-barber.jpg`.
 - `GetRoster.py` uses the existing database to preserve image numbering for returning players.
 

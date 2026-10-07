@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 import SQLite3
 
 enum RosterLoaderError: LocalizedError {
@@ -17,7 +18,7 @@ enum RosterLoaderError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .databaseNotFound:
-            return "Could not find browns.db in the app bundle."
+            return "Could not find browns.db."
         case .openFailed(let message):
             return "Could not open browns.db: \(message)"
         case .prepareFailed(let message):
@@ -131,7 +132,7 @@ struct RosterLoader {
     }
 
     private func databaseURL() -> URL? {
-        Bundle.main.url(
+        RosterUpdater.downloadedDatabaseURLIfAvailable() ?? Bundle.main.url(
             forResource: "browns",
             withExtension: "db",
             subdirectory: "Resources"
@@ -152,5 +153,117 @@ struct RosterLoader {
         }
 
         return textValue(statement, column: column)
+    }
+}
+
+struct RosterManifest: Codable, Equatable {
+    let version: String
+    let playerCount: Int
+    let sha256: String
+    let databaseUrl: URL
+}
+
+struct RosterUpdater {
+    private let manifestURL = URL(
+        string: "https://garyi113.github.io/BrownsRoster/roster/roster_manifest.json"
+    )!
+
+    func updateIfNeeded() async throws -> Bool {
+        let (manifestData, _) = try await URLSession.shared.data(from: manifestURL)
+        let remoteManifest = try JSONDecoder().decode(RosterManifest.self, from: manifestData)
+
+        if let localManifest = try? Self.localManifest(), localManifest.sha256 == remoteManifest.sha256 {
+            return false
+        }
+
+        let (databaseData, _) = try await URLSession.shared.data(from: remoteManifest.databaseUrl)
+        guard Self.sha256Hex(for: databaseData) == remoteManifest.sha256 else {
+            throw RosterUpdaterError.hashMismatch
+        }
+
+        try Self.install(databaseData: databaseData, manifestData: manifestData)
+        return true
+    }
+
+    static func downloadedDatabaseURLIfAvailable() -> URL? {
+        let url = downloadedDatabaseURL
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    private static func applicationSupportDirectory() throws -> URL {
+        let directory = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        .appendingPathComponent("BrownsRoster1", isDirectory: true)
+
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+
+        return directory
+    }
+
+    private static var downloadedDatabaseURL: URL {
+        get {
+            do {
+                return try applicationSupportDirectory().appendingPathComponent("browns.db")
+            } catch {
+                return FileManager.default.temporaryDirectory.appendingPathComponent("browns.db")
+            }
+        }
+    }
+
+    private static var localManifestURL: URL {
+        get {
+            do {
+                return try applicationSupportDirectory().appendingPathComponent("roster_manifest.json")
+            } catch {
+                return FileManager.default.temporaryDirectory.appendingPathComponent("roster_manifest.json")
+            }
+        }
+    }
+
+    private static func localManifest() throws -> RosterManifest {
+        let data = try Data(contentsOf: localManifestURL)
+        return try JSONDecoder().decode(RosterManifest.self, from: data)
+    }
+
+    private static func sha256Hex(for data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func install(databaseData: Data, manifestData: Data) throws {
+        let directory = try applicationSupportDirectory()
+        let temporaryDatabaseURL = directory.appendingPathComponent("browns.db.download")
+        let temporaryManifestURL = directory.appendingPathComponent("roster_manifest.json.download")
+
+        try databaseData.write(to: temporaryDatabaseURL, options: .atomic)
+        try manifestData.write(to: temporaryManifestURL, options: .atomic)
+
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: downloadedDatabaseURL.path) {
+            try fileManager.removeItem(at: downloadedDatabaseURL)
+        }
+        if fileManager.fileExists(atPath: localManifestURL.path) {
+            try fileManager.removeItem(at: localManifestURL)
+        }
+
+        try fileManager.moveItem(at: temporaryDatabaseURL, to: downloadedDatabaseURL)
+        try fileManager.moveItem(at: temporaryManifestURL, to: localManifestURL)
+    }
+}
+
+enum RosterUpdaterError: LocalizedError {
+    case hashMismatch
+
+    var errorDescription: String? {
+        switch self {
+        case .hashMismatch:
+            return "Downloaded roster database did not match the published manifest."
+        }
     }
 }
