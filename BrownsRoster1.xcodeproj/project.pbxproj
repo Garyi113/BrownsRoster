@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4EC500F730754CF6005717FC /* GetRoster.py in Resources */ = {isa = PBXBuildFile; fileRef = 4EC500F530754CF6005717FC /* GetRoster.py */; };
+		4EC500F930756058005717FC /* DownloadHeadshots.py in Resources */ = {isa = PBXBuildFile; fileRef = 4EC500F83075603C005717FC /* DownloadHeadshots.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		4E41CA29303C78A50006E58C /* BrownsRoster1Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrownsRoster1Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E41CA33303C78A50006E58C /* BrownsRoster1UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrownsRoster1UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EC500F530754CF6005717FC /* GetRoster.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = GetRoster.py; sourceTree = "<group>"; };
+		4EC500F83075603C005717FC /* DownloadHeadshots.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = DownloadHeadshots.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -101,6 +103,7 @@
 		4EC500F630754CF6005717FC /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				4EC500F83075603C005717FC /* DownloadHeadshots.py */,
 				4EC500F530754CF6005717FC /* GetRoster.py */,
 			);
 			path = Scripts;
@@ -227,6 +230,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4EC500F730754CF6005717FC /* GetRoster.py in Resources */,
+				4EC500F930756058005717FC /* DownloadHeadshots.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,7 +415,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 8864ZNUYTR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -443,7 +447,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 8864ZNUYTR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

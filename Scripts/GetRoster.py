@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import re
+import shutil
 import sqlite3
+import subprocess
+import tempfile
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -48,6 +51,10 @@ def default_database_path() -> Path:
 
 def default_headshots_path() -> Path:
     return project_root() / "BrownsRoster1" / "Resources" / "headshots"
+
+
+def default_backup_path() -> Path:
+    return project_root() / "Backups"
 
 
 def get_roster_page() -> str:
@@ -266,6 +273,72 @@ def write_database(players: list[Player], database_path: Path, snapshot_date: st
         )
 
 
+def database_signature(database_path: Path) -> Optional[tuple[list[tuple], list[tuple]]]:
+    if not database_path.exists():
+        return None
+
+    with sqlite3.connect(database_path) as connection:
+        try:
+            players = connection.execute(
+                """
+                SELECT player_id, name, profile_url, image_url, image_number
+                FROM players
+                ORDER BY player_id
+                """
+            ).fetchall()
+
+            roster = connection.execute(
+                """
+                SELECT
+                    player_id,
+                    number,
+                    position,
+                    height,
+                    weight,
+                    age,
+                    experience,
+                    college,
+                    roster_status
+                FROM roster_history
+                ORDER BY player_id
+                """
+            ).fetchall()
+        except sqlite3.DatabaseError:
+            return None
+
+    return players, roster
+
+
+def databases_match(current_database: Path, new_database: Path) -> bool:
+    current_signature = database_signature(current_database)
+    new_signature = database_signature(new_database)
+    return current_signature is not None and current_signature == new_signature
+
+
+def backup_database(database_path: Path, backup_directory: Path) -> Optional[Path]:
+    if not database_path.exists():
+        return None
+
+    backup_directory.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_path = backup_directory / f"{database_path.stem}-{timestamp}{database_path.suffix}"
+    shutil.copy2(database_path, backup_path)
+    return backup_path
+
+
+def install_database(new_database: Path, database_path: Path) -> None:
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(new_database), str(database_path))
+
+
+def send_notification(title: str, message: str) -> None:
+    script = f'display notification "{message}" with title "{title}"'
+    try:
+        subprocess.run(["osascript", "-e", script], check=False)
+    except OSError:
+        pass
+
+
 def download_headshots(players: list[Player], headshots_path: Path) -> None:
     headshots_path.mkdir(parents=True, exist_ok=True)
 
@@ -305,9 +378,25 @@ def parse_arguments() -> argparse.Namespace:
         help="Snapshot date to store in roster_history.",
     )
     parser.add_argument(
+        "--backup-directory",
+        type=Path,
+        default=default_backup_path(),
+        help="Directory where the previous database is saved when roster data changes.",
+    )
+    parser.add_argument(
         "--skip-headshots",
         action="store_true",
         help="Write the database without downloading missing headshots.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Install the newly generated database even when no roster difference is found.",
+    )
+    parser.add_argument(
+        "--no-notify",
+        action="store_true",
+        help="Do not send a local macOS notification.",
     )
     return parser.parse_args()
 
@@ -322,12 +411,40 @@ def main() -> None:
     if not players:
         raise RuntimeError("No players were found on the Browns roster page.")
 
-    write_database(players, args.database, args.snapshot_date)
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        new_database = Path(temporary_directory) / args.database.name
+        write_database(players, new_database, args.snapshot_date)
+
+        has_changed = not databases_match(args.database, new_database)
+
+        if has_changed or args.force:
+            backup_path = backup_database(args.database, args.backup_directory)
+            install_database(new_database, args.database)
+
+            print(f"Installed updated database: {args.database}")
+            if backup_path:
+                print(f"Saved previous database: {backup_path}")
+            else:
+                print("No previous database existed, so no backup was created.")
+
+            if not args.no_notify:
+                send_notification(
+                    "Browns roster updated",
+                    f"Installed a fresh roster database with {len(players)} players.",
+                )
+        else:
+            print("No roster changes found. Existing database was left in place.")
+
+            if not args.no_notify:
+                send_notification(
+                    "Browns roster unchanged",
+                    f"Checked {len(players)} players. No database update needed.",
+                )
 
     if not args.skip_headshots:
         download_headshots(players, args.headshots)
 
-    print(f"Wrote {len(players)} players to {args.database}")
+    print(f"Checked {len(players)} players from the Browns roster page.")
     if not args.skip_headshots:
         print(f"Headshots directory: {args.headshots}")
 
