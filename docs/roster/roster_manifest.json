@@ -1,6 +1,6 @@
 {
-  "version": "2026-10-07",
-  "playerCount": 77,
-  "sha256": "7ace7100547895f78322f174ced93d93539ccde70cc4fa25e45846c1884a69af",
+  "version": "2026-10-07-test-minus-5",
+  "playerCount": 72,
+  "sha256": "273dbdcb53685f79ebbf3dbec64fd0d42b8841a4ce276f3748b42c4704dd827e",
   "databaseUrl": "https://garyi113.github.io/BrownsRoster/roster/browns.db"
 }

@@ -347,27 +347,78 @@ def file_sha256(file_path: Path) -> str:
     return digest.hexdigest()
 
 
+def database_player_count(database_path: Path) -> int:
+    with sqlite3.connect(database_path) as connection:
+        return connection.execute("SELECT COUNT(*) FROM players").fetchone()[0]
+
+
+def remove_test_players(database_path: Path, drop_count: int) -> list[str]:
+    if drop_count <= 0:
+        return []
+
+    with sqlite3.connect(database_path) as connection:
+        players_to_remove = connection.execute(
+            """
+            SELECT player_id
+            FROM players
+            ORDER BY name DESC
+            LIMIT ?
+            """,
+            (drop_count,),
+        ).fetchall()
+
+        player_ids = [row[0] for row in players_to_remove]
+        if not player_ids:
+            return []
+
+        connection.executemany(
+            "DELETE FROM roster_history WHERE player_id = ?",
+            [(player_id,) for player_id in player_ids],
+        )
+        connection.executemany(
+            "DELETE FROM players WHERE player_id = ?",
+            [(player_id,) for player_id in player_ids],
+        )
+        connection.commit()
+
+    return player_ids
+
+
 def publish_database(
     database_path: Path,
     publish_directory: Path,
     public_base_url: str,
     snapshot_date: str,
     player_count: int,
+    test_drop_count: int = 0,
 ) -> Path:
     publish_directory.mkdir(parents=True, exist_ok=True)
 
     published_database = publish_directory / database_path.name
     shutil.copy2(database_path, published_database)
+    removed_test_player_ids = remove_test_players(published_database, test_drop_count)
+    published_player_count = database_player_count(published_database)
 
     manifest = {
-        "version": snapshot_date,
-        "playerCount": player_count,
+        "version": (
+            f"{snapshot_date}-test-minus-{len(removed_test_player_ids)}"
+            if removed_test_player_ids
+            else snapshot_date
+        ),
+        "playerCount": published_player_count,
         "sha256": file_sha256(published_database),
         "databaseUrl": f"{public_base_url.rstrip('/')}/{database_path.name}",
     }
 
     manifest_path = publish_directory / "roster_manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    if removed_test_player_ids:
+        print(
+            "Published test roster database with "
+            f"{len(removed_test_player_ids)} players removed from the hosted copy."
+        )
+
     return manifest_path
 
 
@@ -445,6 +496,15 @@ def parse_arguments() -> argparse.Namespace:
         help="Do not copy browns.db or write roster_manifest.json into the publish directory.",
     )
     parser.add_argument(
+        "--publish-test-drop-count",
+        type=int,
+        default=0,
+        help=(
+            "Test only: remove this many players from the published database copy "
+            "without changing the bundled app database."
+        ),
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Install the newly generated database even when no roster difference is found.",
@@ -505,6 +565,7 @@ def main() -> None:
             args.public_base_url,
             args.snapshot_date,
             len(players),
+            args.publish_test_drop_count,
         )
         print(f"Published roster database: {args.publish_directory / args.database.name}")
         print(f"Published manifest: {manifest_path}")
