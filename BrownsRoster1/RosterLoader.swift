@@ -158,6 +158,7 @@ struct RosterLoader {
 
 struct RosterManifest: Codable, Equatable {
     let version: String
+    let updatedAt: String?
     let playerCount: Int
     let sha256: String
     let databaseUrl: URL
@@ -166,20 +167,31 @@ struct RosterManifest: Codable, Equatable {
 struct RosterDebugInfo: Equatable {
     let source: String
     let manifestVersion: String?
+    let manifestUpdatedAt: String?
     let manifestPlayerCount: Int?
 
-    var summary: String {
-        var parts = ["Source: \(source)"]
-
-        if let manifestVersion {
-            parts.append("Manifest: \(manifestVersion)")
-        }
-
+    var sourceSummary: String {
         if let manifestPlayerCount {
-            parts.append("Published: \(manifestPlayerCount)")
+            return "Source: \(source) | Published: \(manifestPlayerCount)"
         }
 
-        return parts.joined(separator: " | ")
+        return "Source: \(source)"
+    }
+
+    var versionSummary: String {
+        guard let manifestVersion else {
+            return "Database version: Bundled"
+        }
+
+        return "Database version: \(manifestVersion)"
+    }
+
+    var updatedSummary: String {
+        guard let manifestUpdatedAt else {
+            return "Updated: Bundled with app"
+        }
+
+        return "Updated: \(manifestUpdatedAt.formattedRosterTimestamp)"
     }
 }
 
@@ -234,6 +246,7 @@ struct RosterUpdater {
             return RosterDebugInfo(
                 source: "Bundled",
                 manifestVersion: nil,
+                manifestUpdatedAt: nil,
                 manifestPlayerCount: nil
             )
         }
@@ -242,6 +255,7 @@ struct RosterUpdater {
         return RosterDebugInfo(
             source: "Downloaded",
             manifestVersion: manifest?.version,
+            manifestUpdatedAt: manifest?.updatedAt,
             manifestPlayerCount: manifest?.playerCount
         )
     }
@@ -310,6 +324,31 @@ struct RosterUpdater {
 
         try fileManager.moveItem(at: temporaryDatabaseURL, to: downloadedDatabaseURL)
         try fileManager.moveItem(at: temporaryManifestURL, to: localManifestURL)
+    }
+}
+
+private extension String {
+    var formattedRosterTimestamp: String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [
+            .withInternetDateTime,
+            .withFractionalSeconds
+        ]
+
+        let date = formatter.date(from: self) ?? {
+            let fallbackFormatter = ISO8601DateFormatter()
+            fallbackFormatter.formatOptions = [.withInternetDateTime]
+            return fallbackFormatter.date(from: self)
+        }()
+
+        guard let date else {
+            return self
+        }
+
+        return date.formatted(
+            date: .abbreviated,
+            time: .shortened
+        )
     }
 }
 

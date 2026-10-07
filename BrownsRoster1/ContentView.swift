@@ -140,6 +140,15 @@ private enum SortOption: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var shortTitle: String {
+        switch self {
+        case .lastName:
+            return "Last"
+        case .number:
+            return "No."
+        }
+    }
+
     func compare(_ first: Player, _ second: Player) -> Bool {
         switch self {
         case .lastName:
@@ -200,13 +209,14 @@ private struct HeaderView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Text(debugInfo.summary)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(updateStatus)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Group {
+                Text(debugInfo.sourceSummary)
+                Text(debugInfo.versionSummary)
+                Text(debugInfo.updatedSummary)
+                Text(updateStatus)
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
         .padding(.horizontal)
         .padding(.top)
@@ -232,14 +242,14 @@ private struct FilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                FilterMenu(title: "Position", selectedOption: $selectedPosition, options: positionOptions)
+            HStack(spacing: 8) {
+                FilterMenu(title: "Pos", selectedOption: $selectedPosition, options: positionOptions)
                 FilterMenu(title: "Status", selectedOption: $selectedStatus, options: statusOptions)
                 SortMenu(selectedSort: $selectedSort)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 12)
         }
-        .font(.subheadline)
+        .font(.caption)
         .padding(.bottom, 8)
     }
 }
@@ -264,6 +274,8 @@ private struct FilterMenu: View {
             }
         } label: {
             Label("\(title): \(selectedOption)", systemImage: "line.3.horizontal.decrease.circle")
+                .labelStyle(.titleAndIcon)
+                .lineLimit(1)
         }
     }
 }
@@ -285,7 +297,9 @@ private struct SortMenu: View {
                 }
             }
         } label: {
-            Label("Sort: \(selectedSort.rawValue)", systemImage: "arrow.up.arrow.down")
+            Label("Sort: \(selectedSort.shortTitle)", systemImage: "arrow.up.arrow.down")
+                .labelStyle(.titleAndIcon)
+                .lineLimit(1)
         }
     }
 }

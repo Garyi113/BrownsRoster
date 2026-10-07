@@ -405,6 +405,7 @@ def publish_database(
             if removed_test_player_ids
             else snapshot_date
         ),
+        "updatedAt": datetime.now().astimezone().isoformat(timespec="seconds"),
         "playerCount": published_player_count,
         "sha256": file_sha256(published_database),
         "databaseUrl": f"{public_base_url.rstrip('/')}/{database_path.name}",
