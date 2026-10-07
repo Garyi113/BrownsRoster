@@ -352,6 +352,178 @@ def database_player_count(database_path: Path) -> int:
         return connection.execute("SELECT COUNT(*) FROM players").fetchone()[0]
 
 
+def archive_file_name(snapshot_date: str, database_path: Path) -> str:
+    safe_date = re.sub(r"[^0-9A-Za-z-]+", "-", snapshot_date).strip("-")
+    short_hash = file_sha256(database_path)[:12]
+    return f"browns-{safe_date}-{short_hash}.db"
+
+
+def load_roster_records(database_path: Path) -> dict[str, dict[str, str]]:
+    if not database_path.exists():
+        return {}
+
+    with sqlite3.connect(database_path) as connection:
+        connection.row_factory = sqlite3.Row
+        rows = connection.execute(
+            """
+            SELECT
+                players.player_id,
+                players.name,
+                roster_history.number,
+                roster_history.position,
+                roster_history.height,
+                roster_history.weight,
+                roster_history.age,
+                roster_history.experience,
+                roster_history.college,
+                roster_history.roster_status
+            FROM players
+            JOIN roster_history
+                ON players.player_id = roster_history.player_id
+            ORDER BY players.name
+            """
+        ).fetchall()
+
+    return {
+        row["player_id"]: {
+            "name": row["name"] or "",
+            "number": row["number"] or "",
+            "position": row["position"] or "",
+            "height": row["height"] or "",
+            "weight": row["weight"] or "",
+            "age": row["age"] or "",
+            "experience": row["experience"] or "",
+            "college": row["college"] or "",
+            "roster_status": row["roster_status"] or "",
+        }
+        for row in rows
+    }
+
+
+def describe_player(record: dict[str, str]) -> str:
+    number = f"#{record['number']} " if record["number"] else ""
+    details = ", ".join(
+        value
+        for value in [
+            record["position"],
+            record["height"],
+            f"{record['weight']} lbs" if record["weight"] else "",
+            record["roster_status"],
+        ]
+        if value
+    )
+    return f"{number}{record['name']} ({details})"
+
+
+def roster_change_lines(previous_database: Path, current_database: Path) -> list[str]:
+    previous_roster = load_roster_records(previous_database)
+    current_roster = load_roster_records(current_database)
+
+    if not previous_roster:
+        return ["No previous published database was available for comparison."]
+
+    lines: list[str] = []
+
+    added_ids = sorted(
+        set(current_roster) - set(previous_roster),
+        key=lambda player_id: current_roster[player_id]["name"],
+    )
+    removed_ids = sorted(
+        set(previous_roster) - set(current_roster),
+        key=lambda player_id: previous_roster[player_id]["name"],
+    )
+    shared_ids = sorted(
+        set(previous_roster) & set(current_roster),
+        key=lambda player_id: current_roster[player_id]["name"],
+    )
+
+    if added_ids:
+        lines.append("Added players:")
+        lines.extend(f"- {describe_player(current_roster[player_id])}" for player_id in added_ids)
+        lines.append("")
+
+    if removed_ids:
+        lines.append("Removed players:")
+        lines.extend(f"- {describe_player(previous_roster[player_id])}" for player_id in removed_ids)
+        lines.append("")
+
+    field_labels = {
+        "number": "Number",
+        "position": "Position",
+        "height": "Height",
+        "weight": "Weight",
+        "age": "Age",
+        "experience": "Experience",
+        "college": "College",
+        "roster_status": "Roster status",
+    }
+
+    changed_players: list[str] = []
+    for player_id in shared_ids:
+        previous = previous_roster[player_id]
+        current = current_roster[player_id]
+        changes = [
+            f"{label}: {previous[field] or '-'} -> {current[field] or '-'}"
+            for field, label in field_labels.items()
+            if previous[field] != current[field]
+        ]
+
+        if changes:
+            changed_players.append(f"- {current['name']}: " + "; ".join(changes))
+
+    if changed_players:
+        lines.append("Changed players:")
+        lines.extend(changed_players)
+        lines.append("")
+
+    if not lines:
+        lines.append("No roster changes found compared with the previous published database.")
+
+    return lines
+
+
+def write_roster_change_report(
+    previous_database: Path,
+    current_database: Path,
+    publish_directory: Path,
+    snapshot_date: str,
+    updated_at: str,
+    current_player_count: int,
+) -> Path:
+    archive_directory = publish_directory / "archive"
+    archive_directory.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    report_path = archive_directory / f"changes-{timestamp}.txt"
+    latest_report_path = publish_directory / "latest_changes.txt"
+
+    lines = [
+        "Browns roster database changes",
+        f"Snapshot date: {snapshot_date}",
+        f"Updated at: {updated_at}",
+        f"Current player count: {current_player_count}",
+        "",
+        *roster_change_lines(previous_database, current_database),
+        "",
+    ]
+
+    report_text = "\n".join(lines)
+    report_path.write_text(report_text, encoding="utf-8")
+    latest_report_path.write_text(report_text, encoding="utf-8")
+    return report_path
+
+
+def archive_published_database(database_path: Path, publish_directory: Path, snapshot_date: str) -> Path:
+    archive_directory = publish_directory / "archive"
+    archive_directory.mkdir(parents=True, exist_ok=True)
+
+    archive_path = archive_directory / archive_file_name(snapshot_date, database_path)
+    if not archive_path.exists():
+        shutil.copy2(database_path, archive_path)
+
+    return archive_path
+
+
 def remove_test_players(database_path: Path, drop_count: int) -> list[str]:
     if drop_count <= 0:
         return []
@@ -395,20 +567,60 @@ def publish_database(
     publish_directory.mkdir(parents=True, exist_ok=True)
 
     published_database = publish_directory / database_path.name
-    shutil.copy2(database_path, published_database)
-    removed_test_player_ids = remove_test_players(published_database, test_drop_count)
-    published_player_count = database_player_count(published_database)
+    previous_published_database = None
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        if published_database.exists():
+            previous_published_database = Path(temporary_directory) / f"previous-{database_path.name}"
+            shutil.copy2(published_database, previous_published_database)
+
+        shutil.copy2(database_path, published_database)
+        removed_test_player_ids = remove_test_players(published_database, test_drop_count)
+        published_player_count = database_player_count(published_database)
+        updated_at = datetime.now().astimezone().isoformat(timespec="seconds")
+
+        archive_path = archive_published_database(
+            published_database,
+            publish_directory,
+            (
+                f"{snapshot_date}-test-minus-{len(removed_test_player_ids)}"
+                if removed_test_player_ids
+                else snapshot_date
+            ),
+        )
+
+        if previous_published_database is not None:
+            change_report_path = write_roster_change_report(
+                previous_published_database,
+                published_database,
+                publish_directory,
+                snapshot_date,
+                updated_at,
+                published_player_count,
+            )
+        else:
+            change_report_path = write_roster_change_report(
+                published_database,
+                published_database,
+                publish_directory,
+                snapshot_date,
+                updated_at,
+                published_player_count,
+            )
+
+    version = (
+        f"{snapshot_date}-test-minus-{len(removed_test_player_ids)}"
+        if removed_test_player_ids
+        else snapshot_date
+    )
 
     manifest = {
-        "version": (
-            f"{snapshot_date}-test-minus-{len(removed_test_player_ids)}"
-            if removed_test_player_ids
-            else snapshot_date
-        ),
-        "updatedAt": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "version": version,
+        "updatedAt": updated_at,
         "playerCount": published_player_count,
         "sha256": file_sha256(published_database),
         "databaseUrl": f"{public_base_url.rstrip('/')}/{database_path.name}",
+        "archiveDatabaseUrl": f"{public_base_url.rstrip('/')}/archive/{archive_path.name}",
+        "changesUrl": f"{public_base_url.rstrip('/')}/latest_changes.txt",
     }
 
     manifest_path = publish_directory / "roster_manifest.json"
@@ -420,6 +632,8 @@ def publish_database(
             f"{len(removed_test_player_ids)} players removed from the hosted copy."
         )
 
+    print(f"Archived published database: {archive_path}")
+    print(f"Published roster changes: {change_report_path}")
     return manifest_path
 
 

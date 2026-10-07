@@ -69,6 +69,8 @@ When a change is found, `GetRoster.py`:
 - installs the new database at `BrownsRoster1/Resources/browns.db`
 - publishes `docs/roster/browns.db`
 - writes `docs/roster/roster_manifest.json`
+- archives the published database in `docs/roster/archive/`
+- writes `docs/roster/latest_changes.txt` and a timestamped change report
 - downloads missing headshots
 - sends a local macOS notification
 
@@ -99,6 +101,21 @@ https://garyi113.github.io/BrownsRoster/roster/roster_manifest.json
 ```
 
 GitHub Pages should be configured to serve the repository's `docs/` folder. After `docs/roster/` is pushed, the app can compare the manifest hash with the local downloaded copy and install the hosted `browns.db` when it changes.
+
+For daily roster publishing, run the roster script, commit the generated data files, and push:
+
+```bash
+python3 Scripts/GetRoster.py --no-notify --skip-headshots
+git add BrownsRoster1/Resources/browns.db docs/roster
+git commit -m "Update roster database"
+git push https://github.com/Garyi113/BrownsRoster.git main
+```
+
+The latest human-readable roster diff is published at:
+
+```text
+https://garyi113.github.io/BrownsRoster/roster/latest_changes.txt
+```
 
 ## Running the App
 
