@@ -1,17 +1,6 @@
 Browns roster database changes
-Snapshot date: 2026-10-14
-Updated at: 2026-10-14T06:00:06-04:00
+Snapshot date: 2026-10-15
+Updated at: 2026-10-15T06:00:03-04:00
 Current player count: 79
 
-Added players:
-- #36 Audric Estimé (RB, 5-11, 227 lbs, Active)
-- #82 Devin Culp (TE, 6-4, 237 lbs, Practice Squad)
-- #65 Vershon Lee (G, 6-4, 318 lbs, Practice Squad)
-
-Removed players:
-- #80 James Proche II (WR, 5-11, 193 lbs, Practice Squad)
-- #27 Myles Bryant (CB, 5-9, 192 lbs, Practice Squad)
-
-Changed players:
-- Raheim Sanders: Roster status: Active -> Reserve/Injured
-
+No roster changes found compared with the previous published database.
