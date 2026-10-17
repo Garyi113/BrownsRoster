@@ -1,0 +1,8 @@
+Browns roster database changes
+Snapshot date: 2026-10-17
+Updated at: 2026-10-17T06:00:05-04:00
+Current player count: 79
+
+Changed players:
+- Chris Williams: Number: 61 -> 53
+
