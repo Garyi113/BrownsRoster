@@ -1,0 +1,8 @@
+Browns roster database changes
+Snapshot date: 2026-10-20
+Updated at: 2026-10-20T06:00:03-04:00
+Current player count: 79
+
+Changed players:
+- Parker Brailsford: Age: 22 -> 23
+
