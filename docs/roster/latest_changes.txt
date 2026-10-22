@@ -1,8 +1,19 @@
 Browns roster database changes
-Snapshot date: 2026-10-20
-Updated at: 2026-10-20T06:00:03-04:00
-Current player count: 79
+Snapshot date: 2026-10-22
+Updated at: 2026-10-22T06:00:06-04:00
+Current player count: 80
+
+Added players:
+- #62 Andrew Coker (T, 6-7, 315 lbs, Practice Squad)
+- #67 Eric Johnson (DT, 6-4, 320 lbs, Practice Squad)
+- #27 John Saunders Jr. (S, 6-2, 211 lbs, Practice Squad)
+- #47 Wes Pahl (P, 6-4, 207 lbs, Practice Squad)
+
+Removed players:
+- #53 Chris Williams (DT, 6-2, 298 lbs, Practice Squad)
+- #82 Devin Culp (TE, 6-4, 237 lbs, Practice Squad)
+- #60 Nadame Tucker (DE, 6-3, 250 lbs, Practice Squad)
 
 Changed players:
-- Parker Brailsford: Age: 22 -> 23
+- Bub Means: Roster status: Practice Squad -> Practice Squad/Injured
 
