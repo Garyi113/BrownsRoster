@@ -1,6 +1,8 @@
 Browns roster database changes
-Snapshot date: 2026-10-23
-Updated at: 2026-10-23T06:00:05-04:00
+Snapshot date: 2026-10-24
+Updated at: 2026-10-24T06:00:02-04:00
 Current player count: 80
 
-No roster changes found compared with the previous published database.
+Changed players:
+- John Saunders Jr.: Age: 24 -> 25
+
