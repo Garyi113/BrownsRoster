@@ -1,9 +1,6 @@
 Browns roster database changes
-Snapshot date: 2026-10-29
-Updated at: 2026-10-29T06:00:05-04:00
+Snapshot date: 2026-10-30
+Updated at: 2026-10-30T06:00:05-04:00
 Current player count: 78
 
-Changed players:
-- Kalia Davis: Roster status: Reserve/Designated to Return -> Reserve/Injured
-- Quinshon Judkins: Age: 22 -> 23
-
+No roster changes found compared with the previous published database.
