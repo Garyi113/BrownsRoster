@@ -1,0 +1,16 @@
+Browns roster database changes
+Snapshot date: 2026-11-03
+Updated at: 2026-11-03T06:00:03-05:00
+Current player count: 78
+
+Added players:
+- #48 Carsen Ryan (TE, 6-3, 255 lbs, Practice Squad)
+
+Removed players:
+- #36 Audric Estimé (RB, 5-11, 227 lbs, Active)
+
+Changed players:
+- Adin Huntington: Position: DE -> DT
+- Donovan McMillon: Weight: 203 -> 215
+- Obinna Eze: Position: OT -> T
+
