@@ -1,0 +1,11 @@
+Browns roster database changes
+Snapshot date: 2026-11-05
+Updated at: 2026-11-05T06:00:04-05:00
+Current player count: 78
+
+Added players:
+- #27 Hassan Haskins (RB, 6-2, 228 lbs, Practice Squad)
+
+Changed players:
+- Carsen Ryan: Roster status: Practice Squad -> Active
+

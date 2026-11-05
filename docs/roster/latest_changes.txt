@@ -1,22 +1,11 @@
 Browns roster database changes
-Snapshot date: 2026-11-04
-Updated at: 2026-11-04T06:00:04-05:00
-Current player count: 77
+Snapshot date: 2026-11-05
+Updated at: 2026-11-05T06:00:04-05:00
+Current player count: 78
 
 Added players:
-- #64 Austin Blaske (G, 6-5, 310 lbs, Practice Squad)
-- #88 Xavier Guillory (WR, 6-2, 203 lbs, Practice Squad)
-- #66 Xavier Truss (G, 6-7, 320 lbs, Practice Squad)
-
-Removed players:
-- #62 Andrew Coker (T, 6-7, 315 lbs, Practice Squad)
-- #81 Bub Means (WR, 6-2, 215 lbs, Practice Squad/Injured)
-- #65 Vershon Lee (G, 6-4, 318 lbs, Practice Squad)
-- #47 Wes Pahl (P, 6-4, 207 lbs, Practice Squad)
+- #27 Hassan Haskins (RB, 6-2, 228 lbs, Practice Squad)
 
 Changed players:
-- Jared Verse: Age: 25 -> 26
-- Jeremiah Owusu-Koramoah: Age: 26 -> 27
-- Nadame Tucker: Number: 60 -> 53
-- Spencer Fano: Age: 21 -> 22
+- Carsen Ryan: Roster status: Practice Squad -> Active
 

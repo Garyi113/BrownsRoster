@@ -1,9 +1,9 @@
 {
-  "version": "2026-11-04",
-  "updatedAt": "2026-11-04T06:00:04-05:00",
-  "playerCount": 77,
-  "sha256": "e3389c8ba276c1e9075fd37d193bcb4646b73b52aa8d33b7c270b1afdcfb31d2",
+  "version": "2026-11-05",
+  "updatedAt": "2026-11-05T06:00:04-05:00",
+  "playerCount": 78,
+  "sha256": "4e973cc8ad85acf2ddfd24e6b8acbcd42fe7cc0b038d27ac7052ff894bd9d6e3",
   "databaseUrl": "https://garyi113.github.io/BrownsRoster/roster/browns.db",
-  "archiveDatabaseUrl": "https://garyi113.github.io/BrownsRoster/roster/archive/browns-2026-11-04-e3389c8ba276.db",
+  "archiveDatabaseUrl": "https://garyi113.github.io/BrownsRoster/roster/archive/browns-2026-11-05-4e973cc8ad85.db",
   "changesUrl": "https://garyi113.github.io/BrownsRoster/roster/latest_changes.txt"
 }
