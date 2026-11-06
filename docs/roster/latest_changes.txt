@@ -1,11 +1,8 @@
 Browns roster database changes
-Snapshot date: 2026-11-05
-Updated at: 2026-11-05T06:00:04-05:00
-Current player count: 78
+Snapshot date: 2026-11-06
+Updated at: 2026-11-06T06:00:05-05:00
+Current player count: 77
 
-Added players:
-- #27 Hassan Haskins (RB, 6-2, 228 lbs, Practice Squad)
-
-Changed players:
-- Carsen Ryan: Roster status: Practice Squad -> Active
+Removed players:
+- #48 Carsen Ryan (TE, 6-3, 255 lbs, Active)
 

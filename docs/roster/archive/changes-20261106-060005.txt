@@ -1,0 +1,8 @@
+Browns roster database changes
+Snapshot date: 2026-11-06
+Updated at: 2026-11-06T06:00:05-05:00
+Current player count: 77
+
+Removed players:
+- #48 Carsen Ryan (TE, 6-3, 255 lbs, Active)
+
