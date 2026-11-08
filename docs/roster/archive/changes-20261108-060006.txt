@@ -1,0 +1,6 @@
+Browns roster database changes
+Snapshot date: 2026-11-08
+Updated at: 2026-11-08T06:00:06-05:00
+Current player count: 77
+
+No roster changes found compared with the previous published database.
