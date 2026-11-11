@@ -1,0 +1,13 @@
+Browns roster database changes
+Snapshot date: 2026-11-11
+Updated at: 2026-11-11T06:00:05-05:00
+Current player count: 78
+
+Added players:
+- #36 Wes Pahl (P, 6-4, 207 lbs, Practice Squad)
+- #80 Zaire Mitchell-Paden (TE, 6-5, 257 lbs, Practice Squad)
+
+Removed players:
+- #67 Eric Johnson (DT, 6-4, 320 lbs, Practice Squad)
+- #87 John FitzPatrick (TE, 6-7, 262 lbs, Practice Squad)
+
